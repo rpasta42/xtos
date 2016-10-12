@@ -93,8 +93,8 @@ void terminal_putchar(char c) {
 void terminal_write(const char* data, size_t size) {
 	for (size_t i = 0; i < size; i++) {
 		terminal_putchar(data[i]);
-            if (terminal_color++ > 15)
-               terminal_color = 2;
+            /*if (terminal_color++ > 15)
+               terminal_color = 2;*/
       }
 }
 
@@ -118,13 +118,18 @@ static inline uint8_t inb(uint16_t port) {
     return ret;
 }
 
-int mem_start = 0;
+int mem_start = 100;
 void* malloc(int num) {
    void* ret = (void*)mem_start;
    mem_start += num;
    return ret;
 }
-
+// 1/1000th of a second
+void sleep(int milli) {
+   for (int i = 0; i < milli * 1000; i++) {
+      asm("hlt");
+   }
+}
 
 char digit_to_char(int i) {
    return '0' + i;
@@ -144,17 +149,55 @@ char* int_to_str(int num) {
 
    bool done = false;
 
+   if (num < 10)
+      goto small_num; //TODO: could we just change do while to while?
+
    int rem = 0;
    do {
       rem = num % 10;
       num = (num - rem) / 10;
       ret[i--] = digit_to_char(rem);
-   } while (num >  1); //(num > 1); //(rem != 0)
+   } while (num >= 10); //(num > 1); //(rem != 0)
 
+small_num:
    ret[i] = digit_to_char(num);
    //ret[MAX_NUM_STR_LEN - digit_counter++] = '\0';
 
    return ret + i;
+}
+
+void test_int_to_str() {
+   terminal_writestring(int_to_str(100)); terminal_putchar(' ');
+   terminal_writestring(int_to_str(102)); terminal_putchar(' ');
+   terminal_writestring(int_to_str(350)); terminal_putchar(' ');
+   terminal_writestring(int_to_str(0)); terminal_putchar(' ');
+   terminal_writestring(int_to_str(15)); terminal_putchar(' ');
+   terminal_writestring(int_to_str(8)); terminal_putchar(' ');
+   terminal_writestring(int_to_str(10)); terminal_putchar(' ');
+}
+
+void test_write_string() {
+   // Newline support is left as an exercise.
+   terminal_writestring("Hello, kernel World!\n");
+   terminal_writestring("$WAG_M0NEY");
+}
+
+void test_random() {
+   /*char first = *((char*)(0x64));
+
+   i = 0;
+   while (true) {
+      //if (i++ != 100) continue;
+      i = 0;
+      char c = *((char*)(0x64));
+      //terminal_putchar(c);
+      if (c != first) terminal_putchar(c);
+   }*/
+
+      //i = 0;
+      //while(true) { terminal_putchar(i++); }
+
+
 }
 
 char getScancode() {
@@ -168,13 +211,74 @@ char getScancode() {
    } while(1);
 }
 
-void keyboard_example() {
+//char getch() {}
+
+#define scank(n, ret) if (scan_code == (n)) return ret;
+
+char scanToKey(char scan_code) {
+
+   //16 = 'q'
+   /*uint8_t q_to_p = 'p' - 'q';
+   if (scan_code >= 16 && (scan_code <= (scan_code + q_to_p))) {
+      _scank(scan_code, 'q' + q_to_p)
+   }*/
+
+   //char top_row[] = {'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']'};
+
+   scank(41, '`');
+   char qwerty[] = "qwertyuiop[]..asdfghjkl;'`..zxcvbnm,./";
+
+   for (uint8_t i = 0; i < sizeof(qwerty)/sizeof(char); i++) {
+      scank(i + 16, qwerty[i]);
+   }
+
+   char top_row[] = "1234567890-=";
+   if (scan_code >= 2 && scan_code <= 13) {
+      scank(scan_code, top_row[scan_code - 2]);
+   }
+
+
+   /*scank(16, 'q')
+   scank(17, 'w')
+   scank(18, 'e')
+   scank(19, 'r')
+   scank(20, 't')
+   scank(21, 'y')
+   scank(21, 'u')
+   scank(21, 'i')*/
+
+   scank(46, 'c')
+   scank(30, 'a')
+   scank(31, 's')
+   scank(48, 'b')
+
+   return ' ';
+}
+
+void test_keyboard() {
+
+   /*terminal_writestring(int_to_str('.'));
+   terminal_writestring(int_to_str('.'));
+   return;*/
+
    char prev = NULL;
 
    while (true) {
       char c = getScancode();
-      if (prev != c)
+      if (prev != c) {
+         terminal_writestring(int_to_str(c));
+
+         terminal_putchar(' ');
+         terminal_putchar(scanToKey(c));
+
+         terminal_putchar(' ');
          terminal_putchar(c);
+
+         terminal_row++;
+         terminal_column = 0;
+
+         //terminal_putchar(c);
+      }
       prev = c;
    }
 }
@@ -185,40 +289,14 @@ void keyboard_example() {
 extern "C" /* Use C linkage for kernel_main. */
 #endif
 void kernel_main(void) {
-      int i;
-      //return;
+   terminal_initialize(); // Initialize terminal interface
+   //sleep(1000);
+   //asm("hlt");
 
-	// Initialize terminal interface
-	terminal_initialize();
-
-	// Newline support is left as an exercise.
-	//terminal_writestring("Hello, kernel World!\n");
-	//terminal_writestring("$WAG_M0NEY");
-
-      terminal_writestring(int_to_str(100));
-
-      return;
-
-      //i = 0;
-      //while(true) { terminal_putchar(i++); }
-
-      while (true) {
-         char c = getScancode();
-         terminal_putchar(c);
-      }
-
-      return;
-
-      /*char first = *((char*)(0x64));
-
-      i = 0;
-      while (true) {
-         //if (i++ != 100) continue;
-         i = 0;
-         char c = *((char*)(0x64));
-         //terminal_putchar(c);
-         if (c != first) terminal_putchar(c);
-      }*/
+   //test_write_string();
+   //test_random();
+   test_keyboard();
+   return;
 }
 
 
