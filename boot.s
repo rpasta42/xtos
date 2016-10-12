@@ -45,7 +45,14 @@ stack_top:
 #   mov %ax, 0x13
 #   int $10
 
-#int_handler:
+#.extern idtp
+
+.global _idt_load
+.type _idt_load, @function
+_idt_load:
+   lidt idtp #[_idtp]
+   ret
+
 #   mov %ax,
 
 .global _start
