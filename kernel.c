@@ -139,8 +139,8 @@ char* int_to_str(int num) {
    int MAX_NUM_STR_LEN = 15;
    char* ret = malloc(MAX_NUM_STR_LEN);
 
-   int digit_counter = 2;
-   ret[MAX_NUM_STR_LEN - digit_counter] = '\0';
+   int i = MAX_NUM_STR_LEN-1;
+   ret[i--] = '\0';
 
    bool done = false;
 
@@ -148,13 +148,13 @@ char* int_to_str(int num) {
    do {
       rem = num % 10;
       num = (num - rem) / 10;
-      ret[MAX_NUM_STR_LEN - digit_counter++] = digit_to_char(rem);
-   } while (num %  1); //(num > 1); //(rem != 0)
+      ret[i--] = digit_to_char(rem);
+   } while (num >  1); //(num > 1); //(rem != 0)
 
-   ret[MAX_NUM_STR_LEN - digit_counter++] = digit_to_char(num);
+   ret[i] = digit_to_char(num);
    //ret[MAX_NUM_STR_LEN - digit_counter++] = '\0';
 
-   return ret + (MAX_NUM_STR_LEN - digit_counter);
+   return ret + i;
 }
 
 char getScancode() {
