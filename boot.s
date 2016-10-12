@@ -48,9 +48,6 @@ stack_top:
 .global _start
 .type _start, @function
 _start:
-   #mov %ax, 0x13
-   #int $10
-
 	# The bootloader has loaded us into 32-bit protected mode on a x86
 	# machine. Interrupts are disabled. Paging is disabled. The processor
 	# state is as defined in the multiboot standard. The kernel has full
@@ -82,6 +79,9 @@ _start:
 	# aligned above and we've since pushed a multiple of 16 bytes to the
 	# stack since (pushed 0 bytes so far) and the alignment is thus
 	# preserved and the call is well defined.
+
+   #mov %ax, 0x13
+   #int $10
 
 
       mov %edi,0x0A0000

@@ -9,11 +9,18 @@ path = ../cross/i686-elf-2/i686-elf-4.9.1-Linux-x86_64
 
 clean:
 	rm -f kernel.o boot.o myos.bin myos.iso
+	rm -f *.o
 
 myos.bin:
+	#nasm -f elf32 vid.s -o vid.o
+	#nasm -w+gnu-elf-extensions -f elf32 vid.s -o vid.o #need elf 32 bit #yasm -m x86 -a x86 -f bin vid.s -o vid.o #nasm -f aout vid.s -o vid.o
+	#nasm -w+gnu-elf-extensions -f aout vid.s -o vid.o #need elf 32 bit #yasm -m x86 -a x86 -f bin vid.s -o vid.o #nasm -f aout vid.s -o vid.o
+
 	cd $(path); . ./setenv.sh; cd ${oldp}; i686-elf-as boot.s -o boot.o
 	cd $(path); . ./setenv.sh; cd ${oldp}; i686-elf-gcc -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+	#cd $(path); . ./setenv.sh; cd ${oldp}; i686-elf-gcc -T linker.ld -o myos.bin -ffreestanding -O2 -nostdlib boot.o kernel.o vid.o -lgcc
 	cd $(path); . ./setenv.sh; cd ${oldp}; i686-elf-gcc -T linker.ld -o myos.bin -ffreestanding -O2 -nostdlib boot.o kernel.o -lgcc
+
 	qemu-system-i386 -kernel myos.bin
 
 
