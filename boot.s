@@ -45,6 +45,9 @@ stack_top:
 #   mov %ax, 0x13
 #   int $10
 
+#int_handler:
+#   mov %ax,
+
 .global _start
 .type _start, @function
 _start:
