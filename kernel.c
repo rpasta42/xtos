@@ -102,17 +102,15 @@ void terminal_writestring(const char* data) {
 	terminal_write(data, strlen(data));
 }
 
-static inline void outb(uint16_t port, uint8_t val)
-{
-    asm volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
+static inline void outb(uint16_t port, uint8_t val) {
+    asm volatile( "outb %0, %1" : : "a"(val), "Nd"(port));
     /* There's an outb %al, $imm8  encoding, for compile-time constant port numbers that fit in 8b.  (N constraint).
      * Wider immediate constants would be truncated at assemble-time (e.g. "i" constraint).
      * The  outb  %al, %dx  encoding is the only option for all other cases.
      * %1 expands to %dx because  port  is a uint16_t.  %w1 could be used if we had the port number a wider C type */
 }
 
-static inline uint8_t inb(uint16_t port)
-{
+static inline uint8_t inb(uint16_t port) {
     uint8_t ret;
     asm volatile("inb %1, %0"
                  : "=a"(ret)
@@ -120,16 +118,68 @@ static inline uint8_t inb(uint16_t port)
     return ret;
 }
 
+int mem_start = 0;
+void* malloc(int num) {
+   void* ret = (void*)mem_start;
+   mem_start += num;
+   return ret;
+}
+
+
+char digit_to_char(int i) {
+   return '0' + i;
+}
+
+#define uint8_t char
+#define bool char
+#define true 1
+#define false 0
+
+char* int_to_str(int num) {
+   int MAX_NUM_STR_LEN = 15;
+   char* ret = malloc(MAX_NUM_STR_LEN);
+
+   int digit_counter = 2;
+   ret[MAX_NUM_STR_LEN - digit_counter] = '\0';
+
+   bool done = false;
+
+   int rem = 0;
+   do {
+      rem = num % 10;
+      num = (num - rem) / 10;
+      ret[MAX_NUM_STR_LEN - digit_counter++] = digit_to_char(rem);
+   } while (num %  1); //(num > 1); //(rem != 0)
+
+   ret[MAX_NUM_STR_LEN - digit_counter++] = digit_to_char(num);
+   //ret[MAX_NUM_STR_LEN - digit_counter++] = '\0';
+
+   return ret + (MAX_NUM_STR_LEN - digit_counter);
+}
+
 char getScancode() {
    char c = 0;
    do {
       if (inb(0x60) != c) {
          c = inb(0x60);
-         if(c>0)
+         if (c > 0)
             return c;
       }
    } while(1);
 }
+
+void keyboard_example() {
+   char prev = NULL;
+
+   while (true) {
+      char c = getScancode();
+      if (prev != c)
+         terminal_putchar(c);
+      prev = c;
+   }
+}
+
+
 
 #if defined(__cplusplus)
 extern "C" /* Use C linkage for kernel_main. */
@@ -137,24 +187,29 @@ extern "C" /* Use C linkage for kernel_main. */
 void kernel_main(void) {
       int i;
       //return;
-	/* Initialize terminal interface */
+
+	// Initialize terminal interface
 	terminal_initialize();
 
-	/* Newline support is left as an exercise. */
-	terminal_writestring("Hello, kernel World!\n");
+	// Newline support is left as an exercise.
+	//terminal_writestring("Hello, kernel World!\n");
+	//terminal_writestring("$WAG_M0NEY");
 
-	terminal_writestring("$WAG_M0NEY");
+      terminal_writestring(int_to_str(100));
+
+      return;
 
       //i = 0;
       //while(true) { terminal_putchar(i++); }
 
-
-      getScancode();
-      terminal_putchar('k');
+      while (true) {
+         char c = getScancode();
+         terminal_putchar(c);
+      }
 
       return;
 
-      char first = *((char*)(0x64));
+      /*char first = *((char*)(0x64));
 
       i = 0;
       while (true) {
@@ -163,7 +218,7 @@ void kernel_main(void) {
          char c = *((char*)(0x64));
          //terminal_putchar(c);
          if (c != first) terminal_putchar(c);
-      }
+      }*/
 }
 
 
