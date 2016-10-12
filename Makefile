@@ -9,7 +9,13 @@ path = ../cross/i686-elf-2/i686-elf-4.9.1-Linux-x86_64
 
 clean:
 	rm -f kernel.o boot.o myos.bin myos.iso
-	rm -f *.o
+	rm -fr *.o isodir
+
+iso: myos.bin
+	mkdir -p isodir/boot/grub
+	cp myos.bin isodir/boot/myos.bin
+	cp grub.cfg isodir/boot/grub/grub.cfg
+	grub-mkrescue -o myos.iso isodir
 
 myos.bin:
 	#nasm -f elf32 vid.s -o vid.o
