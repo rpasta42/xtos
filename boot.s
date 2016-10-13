@@ -37,6 +37,37 @@ stack_top:
 # doesn't make sense to return from this function as the bootloader is gone.
 .section .text
 
+######################
+
+#extern _gp
+
+.global _gdt_flush
+.type _gdt_flush, @function
+_gdt_flush:
+   lgdt (gp)
+   #mov %ax, 0x10
+   #mov %ds, %ax
+   #mov %es, %ax
+   #mov %fs, %ax
+   #mov %gs, %ax
+   #mov %ss, %ax
+   movw 0x10, %ax
+   movw %ax, %ds
+   movw %ax, %es
+   movw %ax, %fs
+   movw %ax, %gs
+   movw %ax, %ss
+
+   #jmp $0x08:flush2
+   #jmp *flush2, 0x08
+   jmp (flush2+0x08)
+   #jmp (flush2+$08)
+   #jmp (flush2) + $08
+
+
+flush2:
+   ret
+
 #.global _kk
 #.type _kk, @function
 #_kk:
@@ -45,15 +76,93 @@ stack_top:
 #   mov %ax, 0x13
 #   int $10
 
-#.extern idtp
 
+###########setup interrupts
+#http://www.osdever.net/bkerndev/Docs/idt.htm
 .global _idt_load
 .type _idt_load, @function
 _idt_load:
-   lidt idtp #[_idtp]
+   lidt idtp
    ret
 
-#   mov %ax,
+
+.global _isr0
+.type _isr0, @function
+_isr0:
+   cli
+   #push byte 0
+   #push byte 0
+   push 0x0
+   push 0x0
+   jmp isr_common_stub
+
+
+#extern _fault_handler
+isr_common_stub:
+   pusha
+   pushw %ds
+   pushw %es
+   pushw %fs
+   pushw %gs
+   movw 0x10, %ax
+   movw %ax, %ds
+   movw %ax, %es
+   #pusha
+   #push %ds
+   #push %es
+   #push %fs
+   #push %gs
+   #mov %ax, 0x10
+   #mov %ds, %ax
+   #mov %es, %ax
+
+
+   #mov %fs, %ax
+   movw %ax, %fs
+   #mov %gs, %ax
+   movw %ax, %gs
+
+   #mov %eax, %esp
+   movl %esp, %eax
+
+   #push %eax
+   pushl %eax
+
+   #mov %eax, fault_handler
+   movl fault_handler, %eax
+
+   #call %eax
+   call %eax
+
+   popl %eax
+   popw %gs
+   popw %fs
+   popw %es
+   popw %ds
+   popa
+
+   #add %esp, 0
+   addl 0x0, %esp
+
+   iret
+
+#.global _isr1
+#.global _isr2
+#.global _isr3
+#.global _isr4
+#.global _isr5
+#.global _isr6
+#.global _isr7
+#.global _isr8
+#.global _isr9
+#.global _isr10
+#.global _isr
+#.global _isr
+#.global _isr
+#.global _isr
+#.global _isr
+
+##########################
 
 .global _start
 .type _start, @function

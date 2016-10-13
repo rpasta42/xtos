@@ -213,44 +213,42 @@ char getScancode() {
 
 //char getch() {}
 
-#define scank(n, ret) if (scan_code == (n)) return ret;
-
+#define SCAN_TO_KEY_HELPER(n, ret) if (scan_code == (n)) return ret;
+//http://wiki.osdev.org/PS/2_Keyboard
 char scanToKey(char scan_code) {
 
    //16 = 'q'
    /*uint8_t q_to_p = 'p' - 'q';
    if (scan_code >= 16 && (scan_code <= (scan_code + q_to_p))) {
-      _scank(scan_code, 'q' + q_to_p)
+      _SCAN_TO_KEY_HELPER(scan_code, 'q' + q_to_p)
    }*/
 
    //char top_row[] = {'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']'};
 
-   scank(41, '`');
+   SCAN_TO_KEY_HELPER(41, '`');
    char qwerty[] = "qwertyuiop[]..asdfghjkl;'`..zxcvbnm,./";
 
    for (uint8_t i = 0; i < sizeof(qwerty)/sizeof(char); i++) {
-      scank(i + 16, qwerty[i]);
+      SCAN_TO_KEY_HELPER(i + 16, qwerty[i]);
    }
 
    char top_row[] = "1234567890-=";
    if (scan_code >= 2 && scan_code <= 13) {
-      scank(scan_code, top_row[scan_code - 2]);
+      SCAN_TO_KEY_HELPER(scan_code, top_row[scan_code - 2]);
    }
 
-
-   /*scank(16, 'q')
-   scank(17, 'w')
-   scank(18, 'e')
-   scank(19, 'r')
-   scank(20, 't')
-   scank(21, 'y')
-   scank(21, 'u')
-   scank(21, 'i')*/
-
-   scank(46, 'c')
-   scank(30, 'a')
-   scank(31, 's')
-   scank(48, 'b')
+   /*SCAN_TO_KEY_HELPER(16, 'q')
+   SCAN_TO_KEY_HELPER(17, 'w')
+   SCAN_TO_KEY_HELPER(18, 'e')
+   SCAN_TO_KEY_HELPER(19, 'r')
+   SCAN_TO_KEY_HELPER(20, 't')
+   SCAN_TO_KEY_HELPER(21, 'y')
+   SCAN_TO_KEY_HELPER(21, 'u')
+   SCAN_TO_KEY_HELPER(21, 'i')*/
+   SCAN_TO_KEY_HELPER(46, 'c')
+   SCAN_TO_KEY_HELPER(30, 'a')
+   SCAN_TO_KEY_HELPER(31, 's')
+   SCAN_TO_KEY_HELPER(48, 'b')
 
    return ' ';
 }
@@ -289,7 +287,14 @@ void test_keyboard() {
 extern "C" /* Use C linkage for kernel_main. */
 #endif
 void kernel_main(void) {
+   //gdt_install();
+   idt_install();
+
+   //volatile int x = 3/0;
+   //int x = 3/0;
+
    terminal_initialize(); // Initialize terminal interface
+   //asm("int $1");
    //sleep(1000);
    //asm("hlt");
 

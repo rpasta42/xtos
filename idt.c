@@ -31,6 +31,13 @@ extern void _idt_load();
 *  than twiddling with the GDT ;) */
 void idt_set_gate(unsigned char num, unsigned long base, unsigned short sel, unsigned char flags)
 {
+   unsigned short base_high = base >> 2;
+   unsigned short base_low = base & (0xf);
+
+   idt[num].base_hi = base_high;
+   idt[num].base_lo = base_low;
+   idt[num].sel = sel;
+   idt[num].flags = flags;
     /* We'll leave you to try and code this function: take the
     *  argument 'base' and split it up into a high and low 16-bits,
     *  storing them in idt[num].base_hi and base_lo. The rest of the
@@ -48,12 +55,14 @@ void idt_install()
     /* Clear out the entire IDT, initializing it to zeros */
     //kk
     //memset(&idt, 0, sizeof(struct idt_entry) * 256);
+    for (int i = 0; i < sizeof(struct idt_entry) * 256; i++) {
+        *((char*)(&idt)) = 0;
+    }
 
     /* Add any new ISRs to the IDT here using idt_set_gate */
 
     /* Points the processor's internal register to the new IDT */
     _idt_load();
 }
-
 
 

@@ -24,10 +24,17 @@ myos.bin:
 
 	cd $(path); . ./setenv.sh; cd ${oldp}; i686-elf-as boot.s -o boot.o
 	cd $(path); . ./setenv.sh; cd ${oldp}; i686-elf-gcc -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+
 	cd $(path); . ./setenv.sh; cd ${oldp}; i686-elf-gcc -c idt.c -o idt.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+	cd $(path); . ./setenv.sh; cd ${oldp}; i686-elf-gcc -c gdt.c -o gdt.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+	cd $(path); . ./setenv.sh; cd ${oldp}; i686-elf-gcc -c isrs.c -o isrs.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 	#cd $(path); . ./setenv.sh; cd ${oldp}; i686-elf-gcc -T linker.ld -o myos.bin -ffreestanding -O2 -nostdlib boot.o kernel.o vid.o -lgcc
-	cd $(path); . ./setenv.sh; cd ${oldp}; i686-elf-gcc -T linker.ld -o myos.bin -ffreestanding -O2 -nostdlib idt.o boot.o kernel.o -lgcc
+
+      #includes interrupts and gdt
+	cd $(path); . ./setenv.sh; cd ${oldp}; i686-elf-gcc -T linker.ld -o myos.bin -ffreestanding -O2 -nostdlib isrs.o gdt.o idt.o boot.o kernel.o -lgcc
+	#cd $(path); . ./setenv.sh; cd ${oldp}; i686-elf-gcc -T linker.ld -o myos.bin -ffreestanding -O2 -nostdlib idt.o boot.o kernel.o -lgcc #includes interrupts
+	#cd $(path); . ./setenv.sh; cd ${oldp}; i686-elf-gcc -T linker.ld -o myos.bin -ffreestanding -O2 -nostdlib boot.o kernel.o -lgcc
 
 	qemu-system-i386 -kernel myos.bin
 
